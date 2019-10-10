@@ -293,7 +293,8 @@ let convert (g : G.guestfs) inspect source output rcaps =
 
     unconfigure_xenpv ();
     unconfigure_prltools ();
-    unconfigure_vmwaretools ()
+    unconfigure_vmwaretools ();
+    install_qemu ()
 
   (* [set_reg_val_dword_1 path name] creates a registry key
    * called [name = dword:1] in the registry [path].
@@ -462,6 +463,19 @@ if errorlevel 3010 exit /b 0
         Firstboot.add_firstboot_script g inspect.i_root
           "uninstall VMware Tools" fb_script
     ) vmwaretools_uninst
+
+  and install_qemu () =
+    let fb_script = "\
+@echo off
+
+echo installing qemu drivers
+powershell \"Import-Certificate -FilePath \\\"C:\\windows\\drivers\\virtio\\cert1.cer\\\" -CertStoreLocation Cert:\\LocalMachine\\TrustedPublisher\"
+powershell \"Get-ChildItem \\\"C:\\windows\\drivers\\virtio\\\" -Recurse -Filter \"*.inf\" | ForEach-Object { c:\\windows\\sysnative\\PNPUtil.exe -i -a $_.FullName }\"
+c:\\windows\\drivers\\virtio\\qemu-ga-x64.msi
+"
+    in
+       Firstboot.add_firstboot_script g inspect.i_root
+           "install qemu tools" fb_script
 
   and update_system_hive reg =
     (* Update the SYSTEM hive.  When this function is called the hive has

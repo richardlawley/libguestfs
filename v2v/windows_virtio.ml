@@ -49,6 +49,19 @@ let rec install_drivers ((g, _) as reg) inspect rcaps =
   let driverdir = sprintf "%s/Drivers/VirtIO" inspect.i_windows_systemroot in
   g#mkdir_p driverdir;
 
+  let source = "/opt/windows-convert/files/cert1.cer" in
+            let target = driverdir // "cert1.cer" in
+            debug "windows: copying guest tools bits: 'host:%s' -> '%s'"
+                  source target;
+
+            g#write target (read_whole_file source);
+
+  let source = "/opt/windows-convert/files/qemu-ga-x64.msi" in
+            let target = driverdir // "qemu-ga-x64.msi" in
+            debug "windows: copying guest tools<--> bits: 'host:%s' -> '%s'"
+                  source target;
+
+            g#write target (read_whole_file source);
   if not (copy_drivers g inspect driverdir) then (
     match rcaps with
     | { rcaps_block_bus = Some Virtio_blk | Some Virtio_SCSI }
